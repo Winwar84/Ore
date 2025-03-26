@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amministrazione - Controllo Ore Lavorate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="theme-color" content="#333">
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+    <div class="container mx-auto p-4 md:p-6 lg:p-8">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold">Pannello di Amministrazione</h1>
+            <div id="header-buttons" class="hidden">
+                <button id="logout-btn" class="py-2 px-4 bg-red-600 text-gray-100 rounded-lg hover:bg-red-700">
+                    Logout Admin
+                </button>
+            </div>
+        </div>
+        
+        <!-- Setup Admin Form (mostrato solo al primo accesso) -->
+        <div id="setup-admin-section" class="bg-gray-800 p-6 rounded-lg mb-6 hidden">
+            <h2 class="text-2xl font-semibold mb-4">Configurazione Amministratore</h2>
+            <p class="mb-4 text-gray-300">Questo è il primo accesso al pannello di amministrazione. Crea un account amministratore per continuare.</p>
+            
+            <form id="setup-admin-form" class="space-y-4">
+                <div>
+                    <label for="setup-username" class="block text-lg font-medium mb-2">Nome utente amministratore</label>
+                    <input type="text" id="setup-username" class="block w-full p-3 text-lg text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                </div>
+                <div>
+                    <label for="setup-password" class="block text-lg font-medium mb-2">Password amministratore</label>
+                    <input type="password" id="setup-password" class="block w-full p-3 text-lg text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                </div>
+                <div>
+                    <label for="setup-confirm-password" class="block text-lg font-medium mb-2">Conferma password</label>
+                    <input type="password" id="setup-confirm-password" class="block w-full p-3 text-lg text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                </div>
+                <div>
+                    <button type="submit" class="w-full py-3 px-4 bg-indigo-600 text-gray-100 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        Crea Account Amministratore
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Admin Login Form -->
+        <div id="admin-login-section" class="bg-gray-800 p-6 rounded-lg mb-6 hidden">
+            <h2 class="text-2xl font-semibold mb-4">Accesso Amministratore</h2>
+            <form id="admin-login-form" class="space-y-4">
+                <div>
+                    <label for="admin-username" class="block text-lg font-medium mb-2">Nome utente</label>
+                    <input type="text" id="admin-username" class="block w-full p-3 text-lg text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                </div>
+                <div>
+                    <label for="admin-password" class="block text-lg font-medium mb-2">Password</label>
+                    <input type="password" id="admin-password" class="block w-full p-3 text-lg text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                </div>
+                <div>
+                    <button type="submit" class="w-full py-3 px-4 bg-indigo-600 text-gray-100 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        Accedi
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Admin Panel (mostrato solo dopo l'autenticazione) -->
+        <div id="admin-panel" class="hidden">
+            <!-- User Management -->
+            <div class="bg-gray-800 p-6 rounded-lg mb-6">
+                <h2 class="text-2xl font-semibold mb-4">Gestione Utenti</h2>
+                
+                <div class="mb-4 flex justify-between items-center">
+                    <div>
+                        <span class="text-lg">Utenti registrati: <span id="user-count" class="font-semibold">0</span></span>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button id="select-all-btn" class="py-2 px-4 bg-blue-600 text-gray-100 rounded-lg hover:bg-blue-700">
+                            Seleziona tutti
+                        </button>
+                        <button id="delete-selected-btn" class="py-2 px-4 bg-red-600 text-gray-100 rounded-lg hover:bg-red-700">
+                            Elimina selezionati
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-lg text-gray-100">
+                        <thead class="bg-gray-700">
+                            <tr>
+                                <th class="px-4 py-2 w-12">Sel.</th>
+                                <th class="px-4 py-2">ID</th>
+                                <th class="px-4 py-2">Nome</th>
+                                <th class="px-4 py-2">Email</th>
+                                <th class="px-4 py-2">Data registrazione</th>
+                                <th class="px-4 py-2">Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table">
+                            <!-- Gli utenti verranno caricati qui dinamicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- System Actions -->
+            <div class="bg-gray-800 p-6 rounded-lg">
+                <h2 class="text-2xl font-semibold mb-4">Azioni di Sistema</h2>
+                <div class="flex space-x-4">
+                    <button id="reset-all-btn" class="py-2 px-4 bg-red-700 text-gray-100 rounded-lg hover:bg-red-800">
+                        Elimina TUTTI gli utenti e i dati
+                    </button>
+                    <a href="index.html" class="py-2 px-4 bg-gray-600 text-gray-100 rounded-lg hover:bg-gray-500">
+                        Torna all'applicazione
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Alert box per messaggi -->
+        <div id="alert" class="fixed bottom-4 right-4 hidden p-4 rounded-lg z-50 transition-opacity duration-300"></div>
+        
+        <!-- Modal di conferma -->
+        <div id="confirm-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+            <div class="bg-gray-800 p-6 rounded-lg max-w-md w-full">
+                <h3 class="text-xl font-bold mb-4">Conferma eliminazione</h3>
+                <p id="confirm-message" class="mb-6">Sei sicuro di voler eliminare gli utenti selezionati? Questa azione è irreversibile.</p>
+                <div class="flex justify-end space-x-4">
+                    <button id="cancel-btn" class="py-2 px-4 bg-gray-600 text-gray-100 rounded-lg hover:bg-gray-500">
+                        Annulla
+                    </button>
+                    <button id="confirm-btn" class="py-2 px-4 bg-red-600 text-gray-100 rounded-lg hover:bg-red-700">
+                        Elimina
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Riferimenti agli elementi DOM
+        const setupAdminSection = document.getElementById('setup-admin-section');
+        const adminLoginSection = document.getElementById('admin-login-section');
+        const adminPanel = document.getElementById('admin-panel');
+        const headerButtons = document.getElementById('header-buttons');
+        const setupAdminForm = document.getElementById('setup-admin-form');
+        const adminLoginForm = document.getElementById('admin-login-form');
+        const usersTable = document.getElementById('users-table');
+        const userCount = document.getElementById('user-count');
+        const selectAllBtn = document.getElementById('select-all-btn');
+        const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+        const resetAllBtn = document.getElementById('reset-all-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const confirmModal = document.getElementById('confirm-modal');
+        const confirmMessage = document.getElementById('confirm-message');
+        const confirmBtn = document.getElementById('confirm-btn');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const alertBox = document.getElementById('alert');
+        
+        // Variabili per tenere traccia dello stato
+        let selectedUsers = [];
+        let allUsers = [];
+        let deleteCallback = null;
+        
+        // Funzione per hashare la password utilizzando SHA-256
+        async function hashPassword(password, salt) {
+            const passwordWithSalt = password + salt;
+            const msgBuffer = new TextEncoder().encode(passwordWithSalt);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+        
+        // Funzione per generare un salt casuale
+        function generateSalt() {
+            const array = new Uint8Array(16);
+            window.crypto.getRandomValues(array);
+            return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+        }
+        
+        // Funzione per mostrare messaggi di avviso
+        function showAlert(message, isError = false) {
+            alertBox.textContent = message;
+            alertBox.classList.remove('hidden');
+            
+            if (isError) {
+                alertBox.classList.remove('bg-green-600');
+                alertBox.classList.add('bg-red-600');
+            } else {
+                alertBox.classList.remove('bg-red-600');
+                alertBox.classList.add('bg-green-600');
+            }
+            
+            // Nascondi l'avviso dopo 3 secondi
+            setTimeout(() => {
+                alertBox.classList.add('opacity-0');
+                setTimeout(() => {
+                    alertBox.classList.add('hidden');
+                    alertBox.classList.remove('opacity-0');
+                }, 300);
+            }, 3000);
+        }
+        
+        // Funzione per mostrare il modal di conferma
+        function showConfirmModal(message, callback) {
+            confirmMessage.textContent = message;
+            deleteCallback = callback;
+            confirmModal.classList.remove('hidden');
+        }
+        
+        // Funzione per nascondere il modal di conferma
+        function hideConfirmModal() {
+            confirmModal.classList.add('hidden');
+            deleteCallback = null;
+        }
+        
+        // Controlla se esiste già un account amministratore
+        function checkAdminAccount() {
+            const adminAccount = localStorage.getItem('adminAccount');
+            
+            if (!adminAccount) {
+                // Nessun account admin, mostra il form di configurazione
+                setupAdminSection.classList.remove('hidden');
+                adminLoginSection.classList.add('hidden');
+                adminPanel.classList.add('hidden');
+            } else {
+                // Account admin esiste, controlla se l'utente è già loggato
+                const adminSession = JSON.parse(localStorage.getItem('adminSession'));
+                
+                if (adminSession && adminSession.loggedIn) {
+                    // Admin già loggato, verifica se la sessione è scaduta
+                    if (adminSession.expiresAt && new Date(adminSession.expiresAt) < new Date()) {
+                        // Sessione scaduta
+                        localStorage.removeItem('adminSession');
+                        setupAdminSection.classList.add('hidden');
+                        adminLoginSection.classList.remove('hidden');
+                        adminPanel.classList.add('hidden');
+                    } else {
+                        // Sessione valida, mostra il pannello admin
+                        setupAdminSection.classList.add('hidden');
+                        adminLoginSection.classList.add('hidden');
+                        adminPanel.classList.remove('hidden');
+                        headerButtons.classList.remove('hidden');
+                        loadUsers();
+                    }
+                } else {
+                    // Admin non loggato, mostra il form di login
+                    setupAdminSection.classList.add('hidden');
+                    adminLoginSection.classList.remove('hidden');
+                    adminPanel.classList.add('hidden');
+                }
+            }
+        }
+        
+        // Gestione della configurazione dell'account amministratore
+        setupAdminForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('setup-username').value;
+            const password = document.getElementById('setup-password').value;
+            const confirmPassword = document.getElementById('setup-confirm-password').value;
+            
+            if (password !== confirmPassword) {
+                showAlert('Le password non corrispondono', true);
+                return;
+            }
+            
+            try {
+                // Genera un salt per la password
+                const salt = generateSalt();
+                const passwordHash = await hashPassword(password, salt);
+                
+                // Crea l'account admin
+                const adminAccount = {
+                    username,
+                    passwordHash,
+                    salt,
+                    createdAt: new Date().toISOString()
+                };
+                
+                // Salva l'account admin
+                localStorage.setItem('adminAccount', JSON.stringify(adminAccount));
+                
+                // Crea una sessione admin
+                const adminSession = {
+                    username,
+                    loggedIn: true,
+                    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 ore di validità
+                };
+                
+                localStorage.setItem('adminSession', JSON.stringify(adminSession));
+                
+                showAlert('Account amministratore creato con successo!');
+                
+                // Mostra il pannello admin
+                setupAdminSection.classList.add('hidden');
+                adminLoginSection.classList.add('hidden');
+                adminPanel.classList.remove('hidden');
+                headerButtons.classList.remove('hidden');
+                
+                // Carica gli utenti
+                loadUsers();
+            } catch (error) {
+                console.error('Errore durante la creazione dell\'account admin:', error);
+                showAlert('Errore durante la creazione dell\'account. Riprova.', true);
+            }
+        });
+        
+        // Gestione del login amministratore
+        adminLoginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('admin-username').value;
+            const password = document.getElementById('admin-password').value;
+            
+            // Ottieni l'account admin
+            const adminAccount = JSON.parse(localStorage.getItem('adminAccount'));
+            
+            if (!adminAccount || adminAccount.username !== username) {
+                showAlert('Credenziali non valide', true);
+                return;
+            }
+            
+            try {
+                // Verifica la password
+                const passwordHash = await hashPassword(password, adminAccount.salt);
+                
+                if (passwordHash !== adminAccount.passwordHash) {
+                    showAlert('Credenziali non valide', true);
+                    return;
+                }
+                
+                // Crea una sessione admin
+                const adminSession = {
+                    username,
+                    loggedIn: true,
+                    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 ore di validità
+                };
+                
+                localStorage.setItem('adminSession', JSON.stringify(adminSession));
+                
+                showAlert('Accesso effettuato con successo!');
+                
+                // Mostra il pannello admin
+                adminLoginSection.classList.add('hidden');
+                adminPanel.classList.remove('hidden');
+                headerButtons.classList.remove('hidden');
+                
+                // Carica gli utenti
+                loadUsers();
+            } catch (error) {
+                console.error('Errore durante il login:', error);
+                showAlert('Errore durante l\'accesso. Riprova.', true);
+            }
+        });
+        
+        // Carica gli utenti nella tabella
+        function loadUsers() {
+            // Ottieni tutti gli utenti
+            allUsers = JSON.parse(localStorage.getItem('users')) || [];
+            userCount.textContent = allUsers.length;
+            
+            // Pulisci la tabella
+            usersTable.innerHTML = '';
+            
+            // Popola la tabella con gli utenti
+            allUsers.forEach(user => {
+                const row = document.createElement('tr');
+                row.setAttribute('data-user-id', user.id);
+                
+                const createdDate = new Date(user.createdAt);
+                const formattedDate = createdDate.toLocaleDateString('it-IT') + ' ' + 
+                                     createdDate.toLocaleTimeString('it-IT');
+                
+                row.innerHTML = `
+                    <td class="px-4 py-2">
+                        <input type="checkbox" class="user-checkbox h-5 w-5 rounded" data-user-id="${user.id}">
+                    </td>
+                    <td class="px-4 py-2">${user.id}</td>
+                    <td class="px-4 py-2">${user.name}</td>
+                    <td class="px-4 py-2">${user.email}</td>
+                    <td class="px-4 py-2">${formattedDate}</td>
+                    <td class="px-4 py-2">
+                        <button class="delete-user-btn py-1 px-3 bg-red-600 text-gray-100 rounded hover:bg-red-700" data-user-id="${user.id}">
+                            Elimina
+                        </button>
+                    </td>
+                `;
+                
+                usersTable.appendChild(row);
+            });
+            
+            // Aggiungi listener alle checkbox
+            document.querySelectorAll('.user-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const userId = this.getAttribute('data-user-id');
+                    
+                    if (this.checked) {
+                        // Aggiungi alla selezione
+                        if (!selectedUsers.includes(userId)) {
+                            selectedUsers.push(userId);
+                        }
+                    } else {
+                        // Rimuovi dalla selezione
+                        const index = selectedUsers.indexOf(userId);
+                        if (index !== -1) {
+                            selectedUsers.splice(index, 1);
+                        }
+                    }
+                    
+                    // Aggiorna pulsante "Elimina selezionati"
+                    updateDeleteSelectedButton();
+                });
+            });
+            
+            // Aggiungi listener ai pulsanti di eliminazione
+            document.querySelectorAll('.delete-user-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const userId = this.getAttribute('data-user-id');
+                    const user = allUsers.find(u => u.id === userId);
+                    
+                    if (user) {
+                        showConfirmModal(`Sei sicuro di voler eliminare l'utente ${user.name} (${user.email})? Questa azione è irreversibile.`, () => {
+                            deleteUsers([userId]);
+                        });
+                    }
+                });
+            });
+            
+            // Resetta selezione
+            selectedUsers = [];
+            updateDeleteSelectedButton();
+        }
+        
+        // Aggiorna stato pulsante "Elimina selezionati"
+        function updateDeleteSelectedButton() {
+            if (selectedUsers.length > 0) {
+                deleteSelectedBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                deleteSelectedBtn.disabled = false;
+            } else {
+                deleteSelectedBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                deleteSelectedBtn.disabled = true;
+            }
+        }
+        
+        // Seleziona tutti gli utenti
+        selectAllBtn.addEventListener('click', function() {
+            const checkboxes = document.querySelectorAll('.user-checkbox');
+            
+            // Controlla se tutte le checkbox sono già selezionate
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = !allChecked;
+                
+                const userId = checkbox.getAttribute('data-user-id');
+                const index = selectedUsers.indexOf(userId);
+                
+                if (!allChecked && index === -1) {
+                    // Seleziona
+                    selectedUsers.push(userId);
+                } else if (allChecked && index !== -1) {
+                    // Deseleziona
+                    selectedUsers.splice(index, 1);
+                }
+            });
+            
+            updateDeleteSelectedButton();
+        });
+        
+        // Elimina gli utenti selezionati
+        deleteSelectedBtn.addEventListener('click', function() {
+            if (selectedUsers.length === 0) return;
+            
+            const userText = selectedUsers.length === 1 ? "utente selezionato" : "utenti selezionati";
+            
+            showConfirmModal(`Sei sicuro di voler eliminare ${selectedUsers.length} ${userText}? Questa azione è irreversibile.`, () => {
+                deleteUsers(selectedUsers);
+            });
+        });
+        
+        // Funzione per eliminare gli utenti
+        function deleteUsers(userIds) {
+            if (userIds.length === 0) return;
+            
+            // Per ogni ID utente
+            userIds.forEach(userId => {
+                // Rimuovi l'utente dall'array
+                const userIndex = allUsers.findIndex(user => user.id === userId);
+                
+                if (userIndex !== -1) {
+                    allUsers.splice(userIndex, 1);
+                    
+                    // Rimuovi i dati delle transazioni dell'utente
+                    localStorage.removeItem(`transactions_${userId}`);
+                    
+                    // Rimuovi la riga dalla tabella
+                    const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+                    if (row) {
+                        row.remove();
+                    }
+                }
+            });
+            
+            // Aggiorna il localStorage
+            localStorage.setItem('users', JSON.stringify(allUsers));
+            
+            // Aggiorna il contatore degli utenti
+            userCount.textContent = allUsers.length;
+            
+            // Resetta la selezione
+            selectedUsers = [];
+            updateDeleteSelectedButton();
+            
+            // Mostra messaggio di successo
+            const userText = userIds.length === 1 ? "utente" : "utenti";
+            showAlert(`${userIds.length} ${userText} eliminati con successo!`);
+        }
+        
+        // Elimina tutti gli utenti e i dati
+        resetAllBtn.addEventListener('click', function() {
+            showConfirmModal('ATTENZIONE: Stai per eliminare TUTTI gli utenti e i loro dati. Questa azione è irreversibile. Continuare?', () => {
+                // Ottieni tutti gli ID utente
+                const userIds = allUsers.map(user => user.id);
+                
+                // Elimina tutti i dati degli utenti
+                userIds.forEach(id => {
+                    localStorage.removeItem(`transactions_${id}`);
+                });
+                
+                // Elimina la lista degli utenti
+                localStorage.removeItem('users');
+                
+                // Resetta l'array degli utenti
+                allUsers = [];
+                selectedUsers = [];
+                
+                // Aggiorna la UI
+                usersTable.innerHTML = '';
+                userCount.textContent = 0;
+                updateDeleteSelectedButton();
+                
+                showAlert('Tutti gli utenti sono stati eliminati con successo.');
+            });
+        });
+        
+        // Logout amministratore
+        logoutBtn.addEventListener('click', function() {
+            localStorage.removeItem('adminSession');
+            window.location.reload();
+        });
+        
+        // Event listener per il pulsante di conferma nel modal
+        confirmBtn.addEventListener('click', function() {
+            if (deleteCallback && typeof deleteCallback === 'function') {
+                deleteCallback();
+            }
+            hideConfirmModal();
+        });
+        
+        // Event listener per il pulsante di annullamento nel modal
+        cancelBtn.addEventListener('click', function() {
+            hideConfirmModal();
+        });
+        
+        // Inizializza la pagina
+        checkAdminAccount();
+    </script>
+</body>
+</html>

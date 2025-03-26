@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controllo Entrate e Uscite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="theme-color" content="#333">
+</head>
+<body class="bg-gray-900 text-gray-100 h-screen flex flex-col">
+    <div class="container mx-auto p-2 sm:p-4 md:p-6">
+        <!-- Header con menu -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 sm:mb-4">
+            <div class="flex justify-between items-center w-full mb-2 sm:mb-0">
+                <h1 class="text-2xl sm:text-3xl font-bold">Controllo Entrate e Uscite</h1>
+                
+                <!-- Hamburger Button (mobile) -->
+                <button id="hamburger-btn" class="sm:hidden p-2 hover:bg-gray-700 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Menu Container -->
+            <div class="relative w-full sm:w-auto">
+                <div class="flex items-center justify-between sm:justify-normal">
+                    <span id="user-name" class="text-base sm:text-lg text-gray-300 mr-4"></span>
+                    
+                    <!-- Desktop Menu -->
+                    <div class="hidden sm:flex gap-2">
+                        <button type="button" onclick="window.location.href='ore-inserite.html'" 
+                            class="py-1 sm:py-2 px-3 sm:px-4 bg-indigo-600 rounded-lg hover:bg-indigo-500 text-sm sm:text-base">
+                            Registro Ore
+                        </button>
+                        <button type="button" onclick="window.location.href='grafico.html'" 
+                            class="py-1 sm:py-2 px-3 sm:px-4 bg-gray-600 rounded-lg hover:bg-gray-500 text-sm sm:text-base">
+                            Vedi Grafico
+                        </button>
+                        <button type="button" id="logout-btn" 
+                            class="py-1 sm:py-2 px-3 sm:px-4 bg-red-600 rounded-lg hover:bg-red-700 text-sm sm:text-base">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mobile Menu (Dropdown) -->
+                <div id="mobile-menu" class="hidden absolute right-0 mt-2 w-full sm:hidden bg-gray-800 rounded-lg shadow-lg z-50">
+                    <div class="flex flex-col p-2 gap-1">
+                        <button type="button" onclick="window.location.href='ore-inserite.html'" 
+                            class="w-full px-4 py-2 text-left hover:bg-gray-700 rounded-lg">
+                            Registro Ore
+                        </button>
+                        <button type="button" onclick="window.location.href='grafico.html'" 
+                            class="w-full px-4 py-2 text-left hover:bg-gray-700 rounded-lg">
+                            Vedi Grafico
+                        </button>
+                        <button type="button" id="mobile-logout-btn" 
+                            class="w-full px-4 py-2 text-left hover:bg-gray-700 rounded-lg">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form e contenuto rimanente -->
+        <form id="form" class="mb-2 sm:mb-4">
+            <input type="hidden" id="edit-index" value="-1">
+            <label for="data" class="block text-base sm:text-lg font-medium mb-1 sm:mb-2">Data e Ora:</label>
+            <div class="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                <input type="date" id="data" class="block w-full p-2 text-base sm:text-lg text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500">
+                <input type="time" id="orario" class="block w-full p-2 text-base sm:text-lg text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500">
+            </div>
+            <label for="tipo" class="block text-base sm:text-lg font-medium mt-2 sm:mt-4 mb-1 sm:mb-2">Tipo:</label>
+            <select id="tipo" class="block w-full p-2 text-base sm:text-lg text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500">
+                <option value="entrata">Entrata</option>
+                <option value="uscita">Uscita</option>
+            </select>
+            <div class="flex justify-end mt-2 sm:mt-4">
+                <button type="button" id="cancel-button" class="hidden py-1 sm:py-2 px-3 sm:px-4 bg-gray-600 text-gray-100 rounded-lg hover:bg-gray-500 mr-2 text-sm sm:text-base">Annulla</button>
+                <button type="submit" id="submit-button" class="py-1 sm:py-2 px-3 sm:px-4 bg-gray-600 text-gray-100 rounded-lg hover:bg-gray-500 text-sm sm:text-base">Aggiungi</button>
+            </div>
+        </form>
+        
+        <div class="bg-gray-800 p-2 sm:p-4 rounded-lg">
+            <h2 class="text-lg sm:text-xl font-semibold mb-2 sm:mb-4">Transazioni Recenti</h2>
+            <div class="overflow-x-auto">
+                <table id="table" class="w-full text-base sm:text-lg text-gray-100">
+                    <thead class="bg-gray-700">
+                        <tr>
+                            <th class="px-2 sm:px-4 py-1 sm:py-2">Data e Ora</th>
+                            <th class="px-2 sm:px-4 py-1 sm:py-2">Tipo</th>
+                            <th class="px-2 sm:px-4 py-1 sm:py-2">Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody">
+                        <!-- dati da inserire -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-2 sm:mt-4 text-center">
+                <p class="text-gray-400 text-sm sm:text-base">
+                    Per visualizzare il registro completo e le statistiche, vai alla pagina 
+                    <a href="ore-inserite.html" class="text-indigo-400 hover:text-indigo-300">Registro Ore</a>.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Controllo autenticazione
+        function checkAuth() {
+            try {
+                const session = JSON.parse(localStorage.getItem('session'));
+                if (!session?.loggedIn) {
+                    window.location.replace('login.html');
+                    return null;
+                }
+                document.getElementById('user-name').textContent = `Ciao, ${session.name}`;
+                return session;
+            } catch (error) {
+                window.location.replace('login.html');
+                return null;
+            }
+        }
+
+        // Gestione Menu Hamburger
+        const hamburgerBtn = document.getElementById('hamburger-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        hamburgerBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!mobileMenu.contains(e.target) && !hamburgerBtn.contains(e.target)) {
+                mobileMenu.classList.add('hidden');
+            }
+        });
+
+        // Logout
+        function handleLogout() {
+            if (confirm('Sei sicuro di voler effettuare il logout?')) {
+                localStorage.removeItem('session');
+                window.location.href = 'login.html';
+            }
+        }
+        document.getElementById('logout-btn').addEventListener('click', handleLogout);
+        document.getElementById('mobile-logout-btn').addEventListener('click', handleLogout);
+
+        // Resto del codice originale...
+        const form = document.getElementById('form');
+        const tbody = document.getElementById('tbody');
+        const tipoSelect = document.getElementById('tipo');
+        const submitButton = document.getElementById('submit-button');
+        const cancelButton = document.getElementById('cancel-button');
+        const editIndexInput = document.getElementById('edit-index');
+        
+        const session = checkAuth();
+        if (!session) throw new Error('Nessuna sessione utente');
+        
+        const userDataKey = `transactions_${session.userId}`;
+        let transactions = JSON.parse(localStorage.getItem(userDataKey)) || [];
+
+        function renderTransactions() {
+            tbody.innerHTML = '';
+            const recentTransactions = [...transactions]
+                .sort((a, b) => new Date(`${b.data}T${b.orario}`) - new Date(`${a.data}T${a.orario}`))
+                .slice(0, 5);
+            
+            recentTransactions.forEach((transaction, i) => {
+                const originalIndex = transactions.findIndex(t => 
+                    t.data === transaction.data && 
+                    t.orario === transaction.orario && 
+                    t.tipo === transaction.tipo
+                );
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-2 sm:px-4 py-1 sm:py-2">${transaction.data} ${transaction.orario}</td>
+                    <td class="px-2 sm:px-4 py-1 sm:py-2">${transaction.tipo}</td>
+                    <td class="px-2 sm:px-4 py-1 sm:py-2">
+                        <button onclick="deleteTransaction(${originalIndex})" 
+                            class="bg-red-600 text-gray-100 py-1 px-2 rounded-lg hover:bg-red-500 mr-1 text-sm sm:text-base">
+                            Elimina
+                        </button>
+                        <button onclick="startEditTransaction(${originalIndex})" 
+                            class="bg-blue-600 text-gray-100 py-1 px-2 rounded-lg hover:bg-blue-500 text-sm sm:text-base">
+                            Modifica
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // ... (resto delle funzioni rimane invariato)
+
+        window.deleteTransaction = deleteTransaction;
+        window.startEditTransaction = startEditTransaction;
+        renderTransactions();
+    </script>
+</body>
+</html>

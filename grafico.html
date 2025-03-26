@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grafico Ore Lavorate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <meta name="theme-color" content="#333">
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+    <div class="container mx-auto p-4 md:p-6 lg:p-8">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold">Analisi Ore Lavorate</h1>
+            <div class="flex items-center">
+                <div class="mr-4">
+                    <span id="user-name" class="text-lg text-gray-300"></span>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="window.location.href='index.html'" class="py-2 px-4 bg-gray-600 text-gray-100 rounded-lg hover:bg-gray-500">
+                        Home
+                    </button>
+                    <button onclick="window.location.href='ore-inserite.html'" class="py-2 px-4 bg-gray-600 text-gray-100 rounded-lg hover:bg-gray-500">
+                        Registro Ore
+                    </button>
+                    <button type="button" id="logout-btn" class="py-2 px-4 bg-red-600 text-gray-100 rounded-lg hover:bg-red-700">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-gray-800 p-4 rounded-lg mb-6">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                <h2 class="text-xl font-semibold mb-2 md:mb-0">Filtri</h2>
+                <div class="flex space-x-2">
+                    <select id="periodo" class="bg-gray-700 text-gray-100 p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500">
+                        <option value="week">Ultima Settimana</option>
+                        <option value="month" selected>Ultimo Mese</option>
+                        <option value="all">Tutto</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div class="bg-gray-700 p-4 rounded-lg">
+                    <h3 class="text-lg font-medium mb-2">Ore Totali</h3>
+                    <p id="ore-totali" class="text-2xl font-bold">--</p>
+                </div>
+                <div class="bg-gray-700 p-4 rounded-lg">
+                    <h3 class="text-lg font-medium mb-2">Media Giornaliera</h3>
+                    <p id="media-giornaliera" class="text-2xl font-bold">--</p>
+                </div>
+                <div class="bg-gray-700 p-4 rounded-lg">
+                    <h3 class="text-lg font-medium mb-2">Giorno Più Lungo</h3>
+                    <p id="giorno-piu-lungo" class="text-2xl font-bold">--</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Grafico a torta per distribuzione per giorni della settimana -->
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <h2 class="text-xl font-semibold mb-4">Distribuzione Ore per Giorno</h2>
+                <div class="h-80">
+                    <canvas id="giornoChart"></canvas>
+                </div>
+                <div class="mt-4 text-sm text-gray-400 text-center">
+                    <p>Distribuzione delle ore lavorate per giorno della settimana</p>
+                </div>
+            </div>
+            
+            <!-- Grafico a torta per distribuzione mensile -->
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <h2 class="text-xl font-semibold mb-4">Distribuzione Mensile</h2>
+                <div class="h-80">
+                    <canvas id="meseChart"></canvas>
+                </div>
+                <div class="mt-4 text-sm text-gray-400 text-center">
+                    <p>Distribuzione delle ore lavorate per mese</p>
+                </div>
+            </div>
+            
+            <!-- Grafico a torta per distribuzione per fasce orarie -->
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <h2 class="text-xl font-semibold mb-4">Fasce Orarie</h2>
+                <div class="h-80">
+                    <canvas id="fasceChart"></canvas>
+                </div>
+                <div class="mt-4 text-sm text-gray-400 text-center">
+                    <p>Distribuzione delle giornate per fasce orarie</p>
+                </div>
+            </div>
+            
+            <!-- Tabella riassuntiva -->
+            <div class="bg-gray-800 p-4 rounded-lg">
+                <h2 class="text-xl font-semibold mb-4">Riepilogo Ore Lavorate</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-lg text-gray-100">
+                        <thead class="bg-gray-700">
+                            <tr>
+                                <th class="px-4 py-2">Data</th>
+                                <th class="px-4 py-2">Giorno</th>
+                                <th class="px-4 py-2">Ore</th>
+                            </tr>
+                        </thead>
+                        <tbody id="riepilogo-tbody">
+                            <!-- Dati verranno inseriti dinamicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Controlla se l'utente è autenticato
+        function checkAuth() {
+            const session = JSON.parse(localStorage.getItem('session'));
+            
+            if (!session || !session.loggedIn) {
+                // Utente non autenticato, reindirizza alla pagina di login
+                window.location.href = 'login.html';
+                return null;
+            }
+            
+            // Controlla se la sessione è scaduta
+            if (session.expiresAt && new Date(session.expiresAt) < new Date()) {
+                // Sessione scaduta, elimina e reindirizza al login
+                localStorage.removeItem('session');
+                window.location.href = 'login.html';
+                return null;
+            }
+            
+            // Mostra il nome dell'utente
+            document.getElementById('user-name').textContent = `Ciao, ${session.name}`;
+            
+            return session;
+        }
+        
+        // Ottieni la sessione utente
+        const session = checkAuth();
+        if (!session) {
+            // Se non c'è sessione, il reindirizzamento avverrà in checkAuth()
+            throw new Error('Nessuna sessione utente');
+        }
+        
+        // Chiave per i dati dell'utente specifico
+        const userDataKey = `transactions_${session.userId}`;
+        
+        // Caricamento dati da localStorage specifico dell'utente
+        const transactions = JSON.parse(localStorage.getItem(userDataKey)) || [];
+        
+        // Logout handler
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            if (confirm('Sei sicuro di voler effettuare il logout?')) {
+                localStorage.removeItem('session');
+                window.location.href = 'login.html';
+            }
+        });
+        
+        // Riferimenti ai canvas per i grafici
+        const ctxGiorno = document.getElementById('giornoChart').getContext('2d');
+        const ctxMese = document.getElementById('meseChart').getContext('2d');
+        const ctxFasce = document.getElementById('fasceChart').getContext('2d');
+        
+        // Variabili globali per i grafici
+        let giornoChart, meseChart, fasceChart;
+        
+        // Colori per i grafici
+        const colori = [
+            '#4F46E5', // Indigo
+            '#0EA5E9', // SkyBlue
+            '#10B981', // Emerald
+            '#F59E0B', // Amber
+            '#EF4444', // Red
+            '#8B5CF6', // Violet
+            '#EC4899'  // Pink
+        ];
+        
+        // Nomi dei giorni della settimana in italiano
+        const giorniSettimana = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+        
+        // Nomi dei mesi in italiano
+        const nomiMesi = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+        
+        // Funzione per raggruppare le transazioni per data
+        function groupTransactionsByDate() {
+            const dataMap = {};
+            
+            transactions.forEach(trans => {
+                if (!dataMap[trans.data]) {
+                    dataMap[trans.data] = {
+                        entrata: null,
+                        uscita: null
+                    };
+                }
+                
+                if (trans.tipo === 'entrata') {
+                    dataMap[trans.data].entrata = trans.orario;
+                } else if (trans.tipo === 'uscita') {
+                    dataMap[trans.data].uscita = trans.orario;
+                }
+            });
+            
+            return dataMap;
+        }
+        
+        // Funzione per calcolare le ore lavorate
+        function calculateWorkedHours(dataMap) {
+            const risultati = [];
+            
+            Object.keys(dataMap).forEach(date => {
+                const entry = dataMap[date];
+                const entrata = entry.entrata;
+                const uscita = entry.uscita;
+                
+                if (entrata && uscita) {
+                    const entrataTime = new Date(`1970-01-01T${entrata}:00`);
+                    const uscitaTime = new Date(`1970-01-01T${uscita}:00`);
+                    const differenzaTime = uscitaTime - entrataTime;
+                    
+                    const hours = Math.floor(differenzaTime / 3600000);
+                    const minutes = Math.floor((differenzaTime % 3600000) / 60000);
+                    
+                    const oreLavorate = hours + (minutes / 60);
+                    
+                    // Aggiungi il giorno della settimana
+                    const dataObj = new Date(date);
+                    const giornoSettimana = dataObj.getDay(); // 0 = Domenica, 1 = Lunedì, ecc.
+                    const mese = dataObj.getMonth(); // 0 = Gennaio, 1 = Febbraio, ecc.
+                    
+                    risultati.push({
+                        data: date,
+                        entrata: entrata,
+                        uscita: uscita,
+                        oreLavorate: oreLavorate,
+                        formattedHours: `${hours} ore e ${minutes} min`,
+                        giornoSettimana: giornoSettimana,
+                        nomeGiorno: giorniSettimana[giornoSettimana],
+                        mese: mese,
+                        nomeMese: nomiMesi[mese]
+                    });
+                }
+            });
+            
+            return risultati;
+        }
+        
+        // Funzione per filtrare i dati in base al periodo selezionato
+        function filterByPeriod(data, period) {
+            const today = new Date();
+            
+            if (period === 'week') {
+                // Ultima settimana
+                const lastWeek = new Date(today);
+                lastWeek.setDate(today.getDate() - 7);
+                return data.filter(item => new Date(item.data) >= lastWeek);
+            } else if (period === 'month') {
+                // Ultimo mese
+                const lastMonth = new Date(today);
+                lastMonth.setMonth(today.getMonth() - 1);
+                return data.filter(item => new Date(item.data) >= lastMonth);
+            } else {
+                // Tutti i dati
+                return data;
+            }
+        }
+        
+        // Funzione per preparare i dati per il grafico per giorni della settimana
+        function prepareDataGiorno(records) {
+            // Inizializza contatori per ogni giorno della settimana
+            const orePerGiorno = [0, 0, 0, 0, 0, 0, 0]; // Domenica, Lunedì, ..., Sabato
+            
+            // Somma le ore per ogni giorno della settimana
+            records.forEach(record => {
+                orePerGiorno[record.giornoSettimana] += record.oreLavorate;
+            });
+            
+            return {
+                labels: giorniSettimana,
+                data: orePerGiorno
+            };
+        }
+        
+        // Funzione per preparare i dati per il grafico per mese
+        function prepareDataMese(records) {
+            // Inizializza contatori per ogni mese
+            const orePerMese = Array(12).fill(0); // Gen, Feb, ..., Dic
+            
+            // Somma le ore per ogni mese
+            records.forEach(record => {
+                orePerMese[record.mese] += record.oreLavorate;
+            });
+            
+            // Rimuovi i mesi senza ore per rendere il grafico più pulito
+            const mesiConOre = [];
+            const oreNeiMesi = [];
+            const coloriMesi = [];
+            
+            orePerMese.forEach((ore, index) => {
+                if (ore > 0) {
+                    mesiConOre.push(nomiMesi[index]);
+                    oreNeiMesi.push(ore);
+                    coloriMesi.push(colori[index % colori.length]);
+                }
+            });
+            
+            return {
+                labels: mesiConOre,
+                data: oreNeiMesi,
+                backgroundColor: coloriMesi
+            };
+        }
+        
+        // Funzione per preparare i dati per il grafico per fasce orarie
+        function prepareDataFasce(records) {
+            // Definisci le fasce orarie
+            const fasce = [
+                { label: 'Meno di 4 ore', min: 0, max: 4, count: 0 },
+                { label: '4-6 ore', min: 4, max: 6, count: 0 },
+                { label: '6-8 ore', min: 6, max: 8, count: 0 },
+                { label: '8 ore', min: 7.9, max: 8.1, count: 0 },
+                { label: '8-10 ore', min: 8.1, max: 10, count: 0 },
+                { label: 'Più di 10 ore', min: 10, max: 24, count: 0 }
+            ];
+            
+            // Conta i giorni in ogni fascia
+            records.forEach(record => {
+                const ore = record.oreLavorate;
+                const fascia = fasce.find(f => ore >= f.min && ore < f.max);
+                if (fascia) {
+                    fascia.count++;
+                }
+            });
+            
+            // Rimuovi le fasce senza giorni
+            const fasceConGiorni = fasce.filter(f => f.count > 0);
+            
+            return {
+                labels: fasceConGiorni.map(f => f.label),
+                data: fasceConGiorni.map(f => f.count)
+            };
+        }
+        
+        // Funzione per creare il grafico a torta per giorni della settimana
+        function createGiornoChart(data) {
+            if (giornoChart) {
+                giornoChart.destroy();
+            }
+            
+            giornoChart = new Chart(ctxGiorno, {
+                type: 'pie',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.data,
+                        backgroundColor: colori,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: '#f3f4f6',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const percentage = (value / data.data.reduce((a, b) => a + b, 0) * 100).toFixed(1);
+                                    return `${label}: ${value.toFixed(1)} ore (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Funzione per creare il grafico a torta per mese
+        function createMeseChart(data) {
+            if (meseChart) {
+                meseChart.destroy();
+            }
+            
+            meseChart = new Chart(ctxMese, {
+                type: 'pie',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.data,
+                        backgroundColor: data.backgroundColor || colori,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: '#f3f4f6',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const percentage = (value / data.data.reduce((a, b) => a + b, 0) * 100).toFixed(1);
+                                    return `${label}: ${value.toFixed(1)} ore (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Funzione per creare il grafico a torta per fasce orarie
+        function createFasceChart(data) {
+            if (fasceChart) {
+                fasceChart.destroy();
+            }
+            
+            fasceChart = new Chart(ctxFasce, {
+                type: 'pie',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        data: data.data,
+                        backgroundColor: colori,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                color: '#f3f4f6',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = data.data.reduce((a, b) => a + b, 0);
+                                    const percentage = (value / total * 100).toFixed(1);
+                                    return `${label}: ${value} giorni (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Funzione per aggiornare la tabella di riepilogo
+        function updateRiepilogoTable(records) {
+            const tbody = document.getElementById('riepilogo-tbody');
+            tbody.innerHTML = '';
+            
+            // Ordina i record per data (più recenti prima)
+            records.sort((a, b) => new Date(b.data) - new Date(a.data));
+            
+            records.forEach(record => {
+                const row = document.createElement('tr');
+                
+                const dataObj = new Date(record.data);
+                const formattedDate = `${dataObj.getDate().toString().padStart(2, '0')}/${(dataObj.getMonth() + 1).toString().padStart(2, '0')}/${dataObj.getFullYear()}`;
+                
+                row.innerHTML = `
+                    <td class="px-4 py-2">${formattedDate}</td>
+                    <td class="px-4 py-2">${record.nomeGiorno}</td>
+                    <td class="px-4 py-2">${record.formattedHours}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Funzione per aggiornare le statistiche
+        function updateStats(records) {
+            // Calcola ore totali
+            const oreTotali = records.reduce((sum, record) => sum + record.oreLavorate, 0);
+            document.getElementById('ore-totali').textContent = `${oreTotali.toFixed(1)} ore`;
+            
+            // Calcola media giornaliera
+            const mediaGiornaliera = records.length > 0 ? oreTotali / records.length : 0;
+            document.getElementById('media-giornaliera').textContent = `${mediaGiornaliera.toFixed(1)} ore`;
+            
+            // Trova giorno con più ore
+            if (records.length > 0) {
+                const giornoPiuLungo = records.reduce((max, record) => 
+                    record.oreLavorate > max.oreLavorate ? record : max, records[0]);
+                
+                const dataPiuLunga = new Date(giornoPiuLungo.data);
+                document.getElementById('giorno-piu-lungo').textContent = 
+                    `${dataPiuLunga.toLocaleDateString('it-IT')} (${giornoPiuLungo.oreLavorate.toFixed(1)} ore)`;
+            } else {
+                document.getElementById('giorno-piu-lungo').textContent = 'Nessun dato';
+            }
+        }
+        
+        // Funzione principale per aggiornare tutti i grafici e le statistiche
+        function updateAllCharts() {
+            const period = document.getElementById('periodo').value;
+            const dataMap = groupTransactionsByDate();
+            const records = calculateWorkedHours(dataMap);
+            const filteredRecords = filterByPeriod(records, period);
+            
+            // Aggiorna statistiche
+            updateStats(filteredRecords);
+            
+            // Aggiorna tabella riepilogo
+            updateRiepilogoTable(filteredRecords);
+            
+            // Prepara dati per grafici
+            const giornoData = prepareDataGiorno(filteredRecords);
+            const meseData = prepareDataMese(filteredRecords);
+            const fasceData = prepareDataFasce(filteredRecords);
+            
+            // Crea i grafici
+            createGiornoChart(giornoData);
+            createMeseChart(meseData);
+            createFasceChart(fasceData);
+        }
+        
+        // Evento: cambiamento del periodo selezionato
+        document.getElementById('periodo').addEventListener('change', updateAllCharts);
+        
+        // Inizializza i grafici
+        updateAllCharts();
+    </script>
+</body>
+</html

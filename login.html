@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accesso - Controllo Ore Lavorate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="theme-color" content="#333">
+    <style>
+        .bg-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%236B7280' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 h-screen flex flex-col justify-center bg-pattern">
+    <div class="container max-w-md mx-auto px-2 sm:px-4">
+        <div class="bg-gray-800 rounded-lg shadow-xl overflow-hidden mx-2 sm:mx-0">
+            <div class="p-4 sm:p-6">
+                <div class="flex justify-center mb-6 sm:mb-8">
+                    <div class="text-center">
+                        <h1 class="text-2xl sm:text-3xl font-bold">Controllo Ore Lavorate</h1>
+                        <p class="text-gray-400 mt-1 sm:mt-2 text-sm sm:text-base">Accedi o registrati per iniziare</p>
+                    </div>
+                </div>
+                
+                <!-- Tabs -->
+                <div class="flex border-b border-gray-700 mb-4">
+                    <button id="login-tab" class="flex-1 py-2 px-2 sm:px-4 text-base sm:text-lg font-medium border-b-2 border-indigo-500 text-indigo-400">Accedi</button>
+                    <button id="register-tab" class="flex-1 py-2 px-2 sm:px-4 text-base sm:text-lg font-medium text-gray-400 hover:text-gray-300">Registrati</button>
+                </div>
+                
+                <!-- Login Form -->
+                <form id="login-form" class="space-y-3 sm:space-y-4">
+                    <div>
+                        <label for="login-email" class="block text-base sm:text-lg font-medium mb-1 sm:mb-2">Email</label>
+                        <input type="email" id="login-email" class="block w-full p-2 sm:p-3 text-base sm:text-lg text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+                    <div>
+                        <label for="login-password" class="block text-base sm:text-lg font-medium mb-1 sm:mb-2">Password</label>
+                        <input type="password" id="login-password" class="block w-full p-2 sm:p-3 text-base sm:text-lg text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="remember" class="h-4 w-4 text-indigo-600 bg-gray-700 border-gray-600 rounded focus:ring-indigo-500">
+                        <label for="remember" class="ml-2 text-gray-400 text-sm sm:text-base">Ricordami</label>
+                    </div>
+                    <div>
+                        <button type="submit" class="w-full py-2 sm:py-3 px-4 bg-indigo-600 text-gray-100 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base sm:text-lg">Accedi</button>
+                    </div>
+                </form>
+                
+                <!-- Register Form (hidden by default) -->
+                <form id="register-form" class="space-y-3 sm:space-y-4 hidden">
+                    <div>
+                        <label for="register-name" class="block text-base sm:text-lg font-medium mb-1 sm:mb-2">Nome completo</label>
+                        <input type="text" id="register-name" class="block w-full p-2 sm:p-3 text-base sm:text-lg text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+                    <div>
+                        <label for="register-email" class="block text-base sm:text-lg font-medium mb-1 sm:mb-2">Email</label>
+                        <input type="email" id="register-email" class="block w-full p-2 sm:p-3 text-base sm:text-lg text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+                    <div>
+                        <label for="register-password" class="block text-base sm:text-lg font-medium mb-1 sm:mb-2">Password</label>
+                        <input type="password" id="register-password" class="block w-full p-2 sm:p-3 text-base sm:text-lg text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+                    <div>
+                        <label for="register-confirm" class="block text-base sm:text-lg font-medium mb-1 sm:mb-2">Conferma password</label>
+                        <input type="password" id="register-confirm" class="block w-full p-2 sm:p-3 text-base sm:text-lg text-gray-100 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+                    <div>
+                        <button type="submit" class="w-full py-2 sm:py-3 px-4 bg-indigo-600 text-gray-100 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base sm:text-lg">Registrati</button>
+                    </div>
+                </form>
+                
+                <!-- Alert -->
+                <div id="alert" class="hidden mt-3 sm:mt-4 p-3 sm:p-4 rounded-lg text-sm sm:text-base"></div>
+            </div>
+            
+            <div class="px-4 py-3 sm:px-6 sm:py-4 bg-gray-700 text-center">
+                <p class="text-gray-400 text-sm sm:text-base">© 2025 Controllo Ore Lavorate</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Riferimenti agli elementi DOM
+        const loginTab = document.getElementById('login-tab');
+        const registerTab = document.getElementById('register-tab');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const alertBox = document.getElementById('alert');
+        
+        // Funzione per mostrare messaggi d'errore o successo
+        function showAlert(message, isError = false) {
+            alertBox.textContent = message;
+            alertBox.classList.remove('hidden');
+            
+            if (isError) {
+                alertBox.classList.remove('bg-green-600');
+                alertBox.classList.add('bg-red-600');
+            } else {
+                alertBox.classList.remove('bg-red-600');
+                alertBox.classList.add('bg-green-600');
+            }
+            
+            // Nascondi l'avviso dopo 3 secondi
+            setTimeout(() => {
+                alertBox.classList.add('hidden');
+            }, 3000);
+        }
+        
+        // Funzione per cambiare tra login e registrazione
+        loginTab.addEventListener('click', () => {
+            loginTab.classList.add('border-b-2', 'border-indigo-500', 'text-indigo-400');
+            loginTab.classList.remove('text-gray-400');
+            
+            registerTab.classList.remove('border-b-2', 'border-indigo-500', 'text-indigo-400');
+            registerTab.classList.add('text-gray-400');
+            
+            loginForm.classList.remove('hidden');
+            registerForm.classList.add('hidden');
+        });
+        
+        registerTab.addEventListener('click', () => {
+            registerTab.classList.add('border-b-2', 'border-indigo-500', 'text-indigo-400');
+            registerTab.classList.remove('text-gray-400');
+            
+            loginTab.classList.remove('border-b-2', 'border-indigo-500', 'text-indigo-400');
+            loginTab.classList.add('text-gray-400');
+            
+            registerForm.classList.remove('hidden');
+            loginForm.classList.add('hidden');
+        });
+        
+        // Funzione per creare un salt casuale
+        function generateSalt() {
+            const array = new Uint8Array(16);
+            window.crypto.getRandomValues(array);
+            return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+        }
+        
+        // Funzione per hashare la password
+        async function hashPassword(password, salt) {
+            const passwordWithSalt = password + salt;
+            const msgBuffer = new TextEncoder().encode(passwordWithSalt);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+        
+        // Gestisci la registrazione
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-confirm').value;
+            
+            if (password !== confirmPassword) {
+                showAlert('Le password non corrispondono', true);
+                return;
+            }
+            
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+            
+            if (users.some(user => user.email === email)) {
+                showAlert('Email già registrata', true);
+                return;
+            }
+            
+            try {
+                const salt = generateSalt();
+                const passwordHash = await hashPassword(password, salt);
+                
+                users.push({
+                    id: Date.now().toString(),
+                    name,
+                    email,
+                    passwordHash,
+                    salt,
+                    createdAt: new Date().toISOString()
+                });
+                
+                localStorage.setItem('users', JSON.stringify(users));
+                showAlert('Registrazione completata con successo!');
+                registerForm.reset();
+                loginTab.click();
+            } catch (error) {
+                console.error('Errore durante l\'hashing della password:', error);
+                showAlert('Errore durante la registrazione. Riprova.', true);
+            }
+        });
+        
+        // Gestisci il login
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const remember = document.getElementById('remember').checked;
+            
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const user = users.find(user => user.email === email);
+            
+            if (!user) {
+                showAlert('Email o password non validi', true);
+                return;
+            }
+            
+            try {
+                const passwordHash = await hashPassword(password, user.salt);
+                
+                if (passwordHash !== user.passwordHash) {
+                    showAlert('Email o password non validi', true);
+                    return;
+                }
+                
+                const session = {
+                    userId: user.id,
+                    name: user.name,
+                    email: user.email,
+                    loggedIn: true,
+                    expiresAt: remember ? null : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+                };
+                
+                localStorage.setItem('session', JSON.stringify(session));
+                
+                if (!localStorage.getItem(`transactions_${user.id}`)) {
+                    localStorage.setItem(`transactions_${user.id}`, JSON.stringify([]));
+                }
+                
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Errore durante la verifica della password:', error);
+                showAlert('Errore durante l\'accesso. Riprova.', true);
+            }
+        });
+        
+        // Controlla se l'utente è già loggato
+        function checkSession() {
+            const session = JSON.parse(localStorage.getItem('session'));
+            
+            if (session && session.loggedIn) {
+                if (session.expiresAt && new Date(session.expiresAt) < new Date()) {
+                    localStorage.removeItem('session');
+                    return;
+                }
+                
+                window.location.href = 'index.html';
+            }
+        }
+        
+        // Controlla sessione all'avvio
+        checkSession();
+    </script>
+</body>
+</html>
